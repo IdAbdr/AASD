@@ -1,0 +1,9 @@
+Preparation date: 2026-10-09
+Interpreter: Python 3.12
+Installed image library in preparation environment: Pillow 12.3.0
+Pinned target Pillow version: 11.3.0 (not installed/validated here)
+Numerical tests: 9 passed
+Syntax compilation: passed
+Web integration tests: 11 prepared, not executed (Flask unavailable)
+Ruff: not executed (unavailable)
+GitHub Actions: configuration prepared; remote execution pending
