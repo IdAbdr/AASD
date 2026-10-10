@@ -64,7 +64,3 @@ Python fits an extensible scientific workflow. Flask preserves the existing smal
 The app binds to loopback and is for local coursework. It has no authentication, multi-user access control, CSRF protection or clinical validation. Files are processed in memory and not stored; SQLite stores only generated IDs, UTC timestamps and numeric descriptors, not original filenames. Use synthetic/non-sensitive public images. Database contents are local and excluded from Git. Delete `instance/research.db` while the app is stopped to clear history. The old uploads and legacy database were deliberately excluded from the new bundle.
 
 Runtime dependencies are pinned directly; transitive dependencies and action tags are not immutable locks. For a long-term release, review current vulnerabilities, create a full dependency lock, and pin actions to commit hashes. An actual classifier would require licensed data, subject-level split controls, evaluation, external validation and explicit model-version tracking.
-
-## License
-
-MIT for the supplied software. This does not grant rights to third-party datasets or images. The license holder must be reviewed by the student before public release.
