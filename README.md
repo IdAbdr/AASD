@@ -45,11 +45,11 @@ python -m unittest discover -s tests -v
 ruff check .
 python -m compileall -q app.py analysis.py tests
 ```
-The preparation environment passed 9 numerical tests and syntax compilation. It lacked Flask and Ruff and could not download them; the 11 web tests and lint were **not executed locally**. Do not treat the workflow file as proof of a successful remote run. Run the full suite after dependency installation, then confirm both GitHub jobs are green. See `docs/VALIDATION.md`.
+The preparation environment passed 9 numerical tests and syntax compilation. It lacked Flask and Ruff and could not download them; the 11 web tests and lint were **not executed locally**. Do not treat the workflow file as proof of a successful remote run. Run the full suite after dependency installation, then confirm both GitHub jobs are green. 
 
 ## Git and GitHub
 
-Local `.git` history is included in the delivered bundle (three commits). If it is present, do not reinitialize it. Publish the project directory as a public repository. The exact commands and screenshots required for submission are in `docs/SUBMISSION_GUIDE_RU.md`. File templates are supplied for bugs and research improvements; actual GitHub issues still need to be opened.
+Local `.git` history is included in the delivered bundle (three commits). If it is present, do not reinitialize it. Publish the project directory as a public repository. File templates are supplied for bugs and research improvements; actual GitHub issues still need to be opened.
 
 ## CI/CD scope
 
