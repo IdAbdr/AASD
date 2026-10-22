@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Skin image research service</title>
+<style>
+body{font:17px/1.55 system-ui,sans-serif;background:#f5f7f9;color:#1e293b;margin:0}
+main{max-width:830px;margin:60px auto;padding:0 28px}h1{font-size:34px;line-height:1.2}
+.scope{color:#475569}form{padding:24px;background:white;border:1px solid #cbd5e1;border-radius:8px}
+button{background:#164e63;color:white;padding:10px 18px;border:0;border-radius:5px;font:inherit;cursor:pointer}
+input{display:block;margin:16px 0 22px;font:inherit;max-width:100%}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:22px;background:#e8eef2;border-radius:6px}
+a{color:#164e63}small{color:#475569}#status{min-height:26px}
+</style></head><body><main>
+<p>Skin Image Research Tool</p><p id="demo-release">Demo release 1</p><h1>Explore image descriptors</h1>
+<p class="scope">Upload an image to inspect its size, colour averages, brightness and contrast.
+This research demonstration processes images in memory and does not store uploads.
+Disease classification is outside this demonstration.</p>
+<form id="upload"><label for="image">JPEG or PNG, up to 8 MiB and 20 megapixels</label>
+<input id="image" type="file" accept="image/png,image/jpeg" required>
+<button type="submit">Analyse image</button></form>
+<p id="status" role="status"></p><pre id="result" hidden></pre>
+<p><a href="/health">Service health</a> &nbsp; <a href="/version">Version information</a></p>
+<small>Use the included synthetic example image for the DevOps demonstration.</small>
+<script>
+document.getElementById('upload').addEventListener('submit',async event=>{
+ event.preventDefault();const file=document.getElementById('image').files[0];if(!file)return;
+ const status=document.getElementById('status'),result=document.getElementById('result');
+ status.textContent='Processing image…';result.hidden=true;
+ try{const response=await fetch('/api/features',{method:'POST',headers:{'Content-Type':file.type||'application/octet-stream'},body:file});
+ const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');
+ result.textContent=JSON.stringify(data,null,2);result.hidden=false;status.textContent='Analysis complete.';
+ }catch(error){status.textContent=error.message;}
+});</script></main></body></html>

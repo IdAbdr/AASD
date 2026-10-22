@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+    options {
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+        timestamps()
+        timeout(time: 25, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+    parameters {
+        booleanParam(name: 'DEPLOY_DEMO', defaultValue: true,
+                     description: 'Deploy the tested image to the local demonstration service')
+    }
+    // No public webhook is needed for the local lab. Closely spaced pushes can be batched.
+    triggers { pollSCM('* * * * *') }
+    stages {
+        stage('Checkout') {
+            steps {
+                deleteDir()
+                checkout scm
+                script {
+                    env.SOURCE_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                    env.IMAGE_TAG = "build-${env.BUILD_NUMBER}-${env.SOURCE_REVISION.take(12)}"
+                    env.TEST_IMAGE = "skinlab-a5-tests:${env.IMAGE_TAG}"
+                    env.RUNTIME_IMAGE = "skinlab-a5:${env.IMAGE_TAG}"
+                    env.TEST_CONTAINER = "skinlab-a5-tests-${env.BUILD_NUMBER}"
+                    env.CANDIDATE = "skinlab-a5-candidate-${env.BUILD_NUMBER}"
+                }
+                sh 'mkdir -p reports; git log -1 --format=fuller > reports/source-commit.txt; docker version > reports/docker-version.txt'
+            }
+        }
+        stage('Build test environment') {
+            steps {
+                sh 'docker build --target test --build-arg SOURCE_REVISION="$SOURCE_REVISION" -t "$TEST_IMAGE" assignment5'
+            }
+        }
+        stage('Unit tests') {
+            steps {
+                sh '''
+                    set -eu
+                    docker create --name "$TEST_CONTAINER" "$TEST_IMAGE"
+                    set +e
+                    docker start --attach "$TEST_CONTAINER"
+                    set -e
+                    result=$(docker inspect --format '{{.State.ExitCode}}' "$TEST_CONTAINER")
+                    docker cp "$TEST_CONTAINER:/tmp/junit.xml" reports/junit.xml
+                    docker rm "$TEST_CONTAINER"
+                    exit "$result"
+                '''
+            }
+            post { always { junit testResults: 'reports/junit.xml', allowEmptyResults: true } }
+        }
+        stage('Build runtime image') {
+            steps {
+                sh 'docker build --target runtime --build-arg SOURCE_REVISION="$SOURCE_REVISION" -t "$RUNTIME_IMAGE" assignment5'
+                sh 'docker image inspect "$RUNTIME_IMAGE" > reports/runtime-image.json'
+            }
+        }
+        stage('Smoke test') {
+            steps {
+                sh '''
+                    set -eu
+                    docker run -d --name "$CANDIDATE" "$RUNTIME_IMAGE"
+                    docker run --rm --network "container:$CANDIDATE" "$TEST_IMAGE"                       python ci/smoke.py --expected-revision "$SOURCE_REVISION" > reports/smoke.json
+                    cat reports/smoke.json
+                '''
+            }
+        }
+        stage('Deploy demo') {
+            when { expression { params.DEPLOY_DEMO } }
+            steps { sh 'sh assignment5/ci/deploy.sh' }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'reports/*', allowEmptyArchive: true
+            sh '''
+                if [ -n "${TEST_CONTAINER:-}" ]; then docker rm -f "$TEST_CONTAINER" >/dev/null 2>&1 || true; fi
+                if [ -n "${CANDIDATE:-}" ]; then docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true; fi
+            '''
+        }
+    }
+}

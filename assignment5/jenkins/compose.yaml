@@ -1,0 +1,40 @@
+name: skinlab-a5
+services:
+  docker:
+    image: docker:28-dind
+    privileged: true
+    environment:
+      DOCKER_TLS_CERTDIR: /certs
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - docker-certs:/certs/client
+      - docker-data:/var/lib/docker
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+  jenkins:
+    build:
+      context: .
+    environment:
+      DOCKER_HOST: tcp://docker:2376
+      DOCKER_CERT_PATH: /certs/client
+      DOCKER_TLS_VERIFY: "1"
+      JAVA_OPTS: -Xms256m -Xmx1024m
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - jenkins-home:/var/jenkins_home
+      - docker-certs:/certs/client:ro
+    depends_on:
+      docker:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  jenkins-home:
+  docker-certs:
+  docker-data:

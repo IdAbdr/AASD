@@ -1,0 +1,2 @@
+# Fully pinned runtime dependency. Python is supplied by the Docker base image.
+Pillow==12.3.0
